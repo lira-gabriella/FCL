@@ -1,186 +1,311 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function TransactionsTabsPage() {
-  const [activeTab, setActiveTab] = useState<'import' | 'export'>('import');
-  const [furnitureList, setFurnitureList] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
-  // Form Entry Values
-  const [selectedFurnitureId, setSelectedFurnitureId] = useState('');
-  const [transactionDate, setTransactionDate] = useState('');
-  const [quantity, setQuantity] = useState('');
+interface FurnitureItem {
+  FurnitureId: number;
+  FurnitureName: string;
+  FurnitureOwnerName: string;
+}
 
-  const fetchItems = async () => {
+export default function TransactionsPage() {
+  const [furnitureOptions, setFurnitureOptions] = useState<FurnitureItem[]>([]);
+
+  // Form Input States
+  const [importForm, setImportForm] = useState({ furnitureId: '', quantity: '', date: '' });
+  const [exportForm, setExportForm] = useState({ furnitureId: '', quantity: '', date: '' });
+
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    loadFurnitureOptions();
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    setImportForm(prev => ({ ...prev, date: todayStr }));
+    setExportForm(prev => ({ ...prev, date: todayStr }));
+  }, []);
+
+  // Fetch registered items from backend database to link with forms
+  const loadFurnitureOptions = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/furniture');
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setFurnitureList(data);
-      }
-    } catch (err) {
-      console.error("Could not reach backend server", err);
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/api/furniture`);
+      if (!res.ok) throw new Error("Could not connect to storage backend API server.");
+      const data = await res.json();
+      setFurnitureOptions(data);
+      setErrorMessage('');
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage("FastAPI connection sync issue: Failed to fetch active furniture items.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  const getFurnitureLabel = (id: string) => {
+    const found = furnitureOptions.find(f => String(f.FurnitureId) === id);
+    return found ? `${found.FurnitureName} (Owner: ${found.FurnitureOwnerName})` : '';
+  };
 
-  const handleTransactionSubmit = async (e: React.FormEvent) => {
+  const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const payload = {
-      FurnitureId: parseInt(selectedFurnitureId),
-      ImportDate: transactionDate, 
-      Quantity: parseInt(quantity)
-    };
-
-   
-    const endpoint = activeTab === 'import' ? '/api/import' : '/api/export';
-
+    if (!importForm.furnitureId || !importForm.quantity || !importForm.date) {
+      return alert("Please fill out all fields for the import record.");
+    }
     try {
-      const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}/api/import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          FurnitureId: parseInt(importForm.furnitureId),
+          ImportDate: importForm.date,
+          Quantity: parseInt(importForm.quantity)
+        })
       });
-      
-      const result = await response.json();
-      setSuccessMessage(`${activeTab === 'import' ? 'Import' : 'Export'} Saved: ${result.message}`);
-
-      setSelectedFurnitureId(''); setTransactionDate(''); setQuantity('');
-      fetchItems();
+      if (res.ok) {
+        alert("Import logged successfully!");
+        setImportForm(prev => ({ ...prev, furnitureId: '', quantity: '' }));
+        loadFurnitureOptions(); // <-- refresh data
+      } else {
+        alert("Failed to submit import. Check server logs.");
+      }
     } catch (err) {
-      setSuccessMessage("Failed to connect to backend server. Make sure it is running.");
+      console.error(err);
+      alert("Network communication error submitting transaction.");
+    }
+  };
+
+  const handleExportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!exportForm.furnitureId || !exportForm.quantity || !exportForm.date) {
+      return alert("Please fill out all fields for the export record.");
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          FurnitureId: parseInt(exportForm.furnitureId),
+          ExportDate: exportForm.date,
+          Quantity: parseInt(exportForm.quantity)
+        })
+      });
+      if (res.ok) {
+        alert("Export logged successfully!");
+        setExportForm(prev => ({ ...prev, furnitureId: '', quantity: '' }));
+        loadFurnitureOptions(); // <-- refresh data
+      } else {
+        alert("Failed to submit export. Check server logs.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network communication error submitting transaction.");
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-sans">
- 
-      <aside className="w-64 bg-[#0a192f] text-white flex flex-col justify-between shrink-0 shadow-xl">
+    <div className="flex h-screen bg-gray-50 font-sans text-gray-800">
+      <div className="w-64 bg-slate-900 text-slate-400 flex flex-col justify-between">
         <div>
-          <div className="p-6 border-b border-gray-800 flex items-center space-x-3">
-            <i className="fa-solid fa-layer-group text-xl text-blue-400"></i>
-            <span className="text-lg font-bold tracking-wider uppercase">CARGO Ltd</span>
+          <div className="p-6 text-white font-bold text-lg tracking-wider border-b border-slate-800">
+            CARGO LTD
           </div>
-          <nav className="p-4 space-y-1 text-sm">
-            <button onClick={() => window.location.href = '/dashboard'} className="w-full flex items-center space-x-3 px-4 py-2.5 rounded text-gray-400 hover:bg-gray-800/50 hover:text-white transition text-left">
-              <i className="fa-solid fa-gauge w-5"></i><span>Dashboard</span>
-            </button>
-            <button onClick={() => window.location.href = '/transactions'} className="w-full flex items-center space-x-3 px-4 py-2.5 rounded bg-blue-600 font-medium text-white transition text-left">
-              <i className="fa-solid fa-right-left w-5"></i><span>Transactions</span>
-            </button>
-            <button onClick={() => window.location.href = '/reports'} className="w-full flex items-center space-x-3 px-4 py-2.5 rounded text-gray-400 hover:bg-gray-800/50 hover:text-white transition text-left">
-              <i className="fa-solid fa-file-invoice w-5"></i><span>Reports</span>
+          <nav className="p-4 space-y-2">
+            <a href="/dashboard" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-slate-400 rounded-lg text-sm font-medium transition block">
+              Dashboard Overview
+            </a>
+            <button type="button" className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium transition text-left">
+              Transactions
             </button>
           </nav>
         </div>
-      </aside>
+      </div>
 
-
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc]">
-        <header className="bg-white h-16 px-8 border-b border-gray-200 flex items-center justify-between shadow-sm">
-          <h2 className="text-xl font-bold text-gray-800">Manage Warehouse Movements</h2>
-        </header>
-
-        <main className="p-8 max-w-5xl w-full mx-auto space-y-6">
-          
-          <div className="flex border-b border-gray-200 space-x-4">
-            <button 
-              type="button"
-              onClick={() => { setActiveTab('import'); setSuccessMessage(''); }}
-              className={`pb-3 text-sm font-bold tracking-wide transition-all ${activeTab === 'import' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              <i className="fa-solid fa-circle-arrow-down mr-1"></i> Imports Section
-            </button>
-            <button 
-              type="button"
-              onClick={() => { setActiveTab('export'); setSuccessMessage(''); }}
-              className={`pb-3 text-sm font-bold tracking-wide transition-all ${activeTab === 'export' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              <i className="fa-solid fa-circle-arrow-up mr-1"></i> Exports Section
-            </button>
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Top Status Banner */}
+        <header className="px-8 py-4 bg-white border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+            System Status: 
+            <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live Operational
+            </span>
           </div>
-
-          {successMessage && (
-            <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-lg text-sm font-medium">
-              <i className="fa-solid fa-circle-check mr-1"></i> {successMessage}
+          {errorMessage && (
+            <div className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-medium">
+              {errorMessage}
             </div>
           )}
+        </header>
 
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
-            <h3 className={`text-md font-bold uppercase ${activeTab === 'import' ? 'text-green-600' : 'text-red-600'}`}>
-              Record {activeTab === 'import' ? 'Incoming Cargo' : 'Outgoing Dispatches'}
-            </h3>
-            
-            <form onSubmit={handleTransactionSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Furniture</label>
-                <select value={selectedFurnitureId} onChange={(e) => setSelectedFurnitureId(e.target.value)} required className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-slate-900">
-                  <option value="">-- Choose Item --</option>
-                  {furnitureList.map((item) => (
-                    <option key={item.FurnitureId} value={item.FurnitureId}>
-                      {item.FurnitureName} ({item.FurnitureOwnerName})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Date</label>
-                <input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} required className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-slate-900" />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Quantity</label>
-                <input type="number" min="1" placeholder="Enter units" value={quantity} onChange={(e) => setQuantity(e.target.value)} required className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-slate-900" />
-              </div>
-
-              <button type="submit" className={`w-full md:w-auto md:col-span-3 text-white font-bold py-2 px-6 rounded-lg text-sm transition ${activeTab === 'import' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
-                Save {activeTab === 'import' ? 'Import' : 'Export'}
-              </button>
-            </form>
+        <main className="p-8 space-y-8 max-w-7xl w-full mx-auto">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Warehouse Ledger Transactions</h1>
+            <p className="text-gray-500 text-xs">Record incoming and outgoing inventory operations below.</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-4 bg-slate-50 border-b flex justify-between items-center">
-              <input 
-                type="text" 
-                placeholder={`Search current ${activeTab}...`} 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="p-2 border border-gray-200 rounded-lg text-sm bg-white w-64 text-slate-900"
-              />
+          {loading ? (
+            <div className="text-center py-12 text-sm text-gray-400">Loading live furniture profiles...</div>
+          ) : (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Log Stock Import */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                    <h2 className="text-base font-bold text-slate-800">Log Stock Import</h2>
+                  </div>
+                  <form onSubmit={handleImportSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Select Furniture Item Type</label>
+                      <select
+                        value={importForm.furnitureId}
+                        onChange={(e) => setImportForm(prev => ({ ...prev, furnitureId: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500"
+                        aria-label="Select furniture item to import"
+                      >
+                        <option value="">-- Choose Item From Active Inventory --</option>
+                        {furnitureOptions.map(item => (
+                          <option key={item.FurnitureId} value={String(item.FurnitureId)}>
+                            {item.FurnitureName} — Owner: {item.FurnitureOwnerName}
+                          </option>
+                        ))}
+                      </select>
+                      {importForm.furnitureId && (
+                        <div className="mt-1 text-xs text-slate-500">{getFurnitureLabel(importForm.furnitureId)}</div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Quantity (Units)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="0"
+                          value={importForm.quantity}
+                          onChange={(e) => setImportForm(prev => ({ ...prev, quantity: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Import Date</label>
+                        <input
+                          type="date"
+                          value={importForm.date}
+                          onChange={(e) => setImportForm(prev => ({ ...prev, date: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-lg transition shadow-sm"
+                    >
+                      save Import
+                    </button>
+                  </form>
+                </div>
+
+                {/* Log Stock Export */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                    <h2 className="text-base font-bold text-slate-800">Log Stock Export</h2>
+                  </div>
+                  <form onSubmit={handleExportSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Select Furniture Item Type</label>
+                      <select
+                        value={exportForm.furnitureId}
+                        onChange={(e) => setExportForm(prev => ({ ...prev, furnitureId: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500"
+                        aria-label="Select furniture item to export"
+                      >
+                        <option value="">-- Choose Item From Active Inventory --</option>
+                        {furnitureOptions.map(item => (
+                          <option key={item.FurnitureId} value={String(item.FurnitureId)}>
+                            {item.FurnitureName} — Owner: {item.FurnitureOwnerName}
+                          </option>
+                        ))}
+                      </select>
+                      {exportForm.furnitureId && (
+                        <div className="mt-1 text-xs text-slate-500">{getFurnitureLabel(exportForm.furnitureId)}</div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Quantity (Units)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="0"
+                          value={exportForm.quantity}
+                          onChange={(e) => setExportForm(prev => ({ ...prev, quantity: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Export Date</label>
+                        <input
+                          type="date"
+                          value={exportForm.date}
+                          onChange={(e) => setExportForm(prev => ({ ...prev, date: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm rounded-lg transition shadow-sm"
+                    >
+                      save Export
+                    </button>
+                  </form>
+                </div>
+              </div>
+              {/* Warehouse Stock Balance Table */}
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div className="bg-slate-800 px-6 py-4">
+                  <h2 className="text-sm font-bold text-white tracking-wide">Live Warehouse Stock Balance</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-gray-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 w-20">ID</th>
+                        <th className="px-6 py-3">Furniture Item Name</th>
+                        <th className="px-6 py-3">Importer / Owner</th>
+                        <th className="px-6 py-3 text-center">Total Imported</th>
+                        <th className="px-6 py-3 text-center">Total Exported</th>
+                        <th className="px-6 py-3 text-right pr-6">Current Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm">
+                      {furnitureOptions.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">No stock items found.</td>
+                        </tr>
+                      ) : (
+                        furnitureOptions.map(item => (
+                          <tr key={item.FurnitureId} className="hover:bg-slate-50">
+                            <td className="px-6 py-3">{item.FurnitureId}</td>
+                            <td className="px-6 py-3">{item.FurnitureName}</td>
+                            <td className="px-6 py-3">{item.FurnitureOwnerName}</td>
+                            <td className="px-6 py-3 text-center">—</td>
+                            <td className="px-6 py-3 text-center">—</td>
+                            <td className="px-6 py-3 text-right pr-6">—</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-xs font-bold text-gray-500 uppercase border-b">
-                  <th className="px-6 py-3">Furniture Name</th>
-                  <th className="px-6 py-3">Owner Business</th>
-                  <th className="px-6 py-3 text-center">Calculated Volume</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-sm">
-                {furnitureList
-                  .filter(item => item.FurnitureName.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map((item) => (
-                    <tr key={item.FurnitureId} className="hover:bg-slate-50/50">
-                      <td className="px-6 py-4 font-bold text-slate-800">{item.FurnitureName}</td>
-                      <td className="px-6 py-4 text-gray-600">{item.FurnitureOwnerName}</td>
-                      <td className={`px-6 py-4 text-center font-bold ${activeTab === 'import' ? 'text-green-600' : 'text-red-600'}`}>
-                        {activeTab === 'import' ? `+${item.TotalImported}` : `-${item.TotalExported}`} units
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-
+          )}
         </main>
       </div>
     </div>
