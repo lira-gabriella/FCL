@@ -10,45 +10,57 @@ interface FurnitureItem {
   FurnitureOwnerName: string;
 }
 
+interface StockReportItem extends FurnitureItem {
+  TotalImported: number;
+  TotalExported: number;
+  CurrentWarehouseStock: number;
+}
+
 export default function TransactionsPage() {
   const [furnitureOptions, setFurnitureOptions] = useState<FurnitureItem[]>([]);
+  const [stockReport, setStockReport] = useState<StockReportItem[]>([]);
 
-  // Form Input States
   const [importForm, setImportForm] = useState({ furnitureId: '', quantity: '', date: '' });
   const [exportForm, setExportForm] = useState({ furnitureId: '', quantity: '', date: '' });
 
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    loadFurnitureOptions();
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    setImportForm(prev => ({ ...prev, date: todayStr }));
-    setExportForm(prev => ({ ...prev, date: todayStr }));
-  }, []);
+  const getFurnitureLabel = (id: string): string => {
+    const item = furnitureOptions.find(f => f.FurnitureId === parseInt(id));
+    return item ? `${item.FurnitureName} — Owner: ${item.FurnitureOwnerName}` : '';
+  };
 
-  // Fetch registered items from backend database to link with forms
-  const loadFurnitureOptions = async () => {
+  const refreshAllData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/furniture`);
-      if (!res.ok) throw new Error("Could not connect to storage backend API server.");
-      const data = await res.json();
-      setFurnitureOptions(data);
+      const resOptions = await fetch(`${API_BASE_URL}/api/report/status`);
+      if (!resOptions.ok) throw new Error("Could not fetch options.");
+      const dataOptions: FurnitureItem[] = await resOptions.json();
+      setFurnitureOptions(dataOptions);
+
+      const resReport = await fetch(`${API_BASE_URL}/api/report/status`);
+      if (!resReport.ok) throw new Error("Could not fetch warehouse metrics.");
+      const dataReport: StockReportItem[] = await resReport.json();
+      setStockReport(dataReport);
+
       setErrorMessage('');
     } catch (err: any) {
       console.error(err);
-      setErrorMessage("FastAPI connection sync issue: Failed to fetch active furniture items.");
+      setErrorMessage("FastAPI connection sync issue: Failed to fetch data.");
     } finally {
       setLoading(false);
     }
   };
 
-  const getFurnitureLabel = (id: string) => {
-    const found = furnitureOptions.find(f => String(f.FurnitureId) === id);
-    return found ? `${found.FurnitureName} (Owner: ${found.FurnitureOwnerName})` : '';
-  };
+  useEffect(() => {
+    refreshAllData();
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    setImportForm(prev => ({ ...prev, date: todayStr }));
+    setExportForm(prev => ({ ...prev, date: todayStr }));
+  }, []);
 
   const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +80,7 @@ export default function TransactionsPage() {
       if (res.ok) {
         alert("Import logged successfully!");
         setImportForm(prev => ({ ...prev, furnitureId: '', quantity: '' }));
-        loadFurnitureOptions(); // <-- refresh data
+        await refreshAllData();
       } else {
         alert("Failed to submit import. Check server logs.");
       }
@@ -96,9 +108,10 @@ export default function TransactionsPage() {
       if (res.ok) {
         alert("Export logged successfully!");
         setExportForm(prev => ({ ...prev, furnitureId: '', quantity: '' }));
-        loadFurnitureOptions(); // <-- refresh data
+        await refreshAllData();
       } else {
-        alert("Failed to submit export. Check server logs.");
+        const errorData = await res.json();
+        alert(errorData.detail || "Failed to submit export.");
       }
     } catch (err) {
       console.error(err);
@@ -114,10 +127,16 @@ export default function TransactionsPage() {
             CARGO LTD
           </div>
           <nav className="p-4 space-y-2">
-            <a href="/dashboard" className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-slate-400 rounded-lg text-sm font-medium transition block">
+            <a
+              href="/dashboard"
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-slate-400 rounded-lg text-sm font-medium transition block"
+            >
               Dashboard Overview
             </a>
-            <button type="button" className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium transition text-left">
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium transition text-left"
+            >
               Transactions
             </button>
           </nav>
@@ -125,10 +144,9 @@ export default function TransactionsPage() {
       </div>
 
       <div className="flex-1 flex flex-col overflow-y-auto">
-        {/* Top Status Banner */}
         <header className="px-8 py-4 bg-white border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-            System Status: 
+            System Status:
             <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
               Live Operational
@@ -160,7 +178,9 @@ export default function TransactionsPage() {
                   </div>
                   <form onSubmit={handleImportSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Select Furniture Item Type</label>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                        Select Furniture Item Type
+                      </label>
                       <select
                         value={importForm.furnitureId}
                         onChange={(e) => setImportForm(prev => ({ ...prev, furnitureId: e.target.value }))}
@@ -168,7 +188,7 @@ export default function TransactionsPage() {
                         aria-label="Select furniture item to import"
                       >
                         <option value="">-- Choose Item From Active Inventory --</option>
-                        {furnitureOptions.map(item => (
+                        {furnitureOptions.map((item) => (
                           <option key={item.FurnitureId} value={String(item.FurnitureId)}>
                             {item.FurnitureName} — Owner: {item.FurnitureOwnerName}
                           </option>
@@ -180,7 +200,9 @@ export default function TransactionsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Quantity (Units)</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                          Quantity (Units)
+                        </label>
                         <input
                           type="number"
                           min="1"
@@ -191,7 +213,9 @@ export default function TransactionsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Import Date</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                          Import Date
+                        </label>
                         <input
                           type="date"
                           value={importForm.date}
@@ -204,7 +228,7 @@ export default function TransactionsPage() {
                       type="submit"
                       className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-lg transition shadow-sm"
                     >
-                      save Import
+                      Save Import
                     </button>
                   </form>
                 </div>
@@ -217,7 +241,9 @@ export default function TransactionsPage() {
                   </div>
                   <form onSubmit={handleExportSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Select Furniture Item Type</label>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                        Select Furniture Item Type
+                      </label>
                       <select
                         value={exportForm.furnitureId}
                         onChange={(e) => setExportForm(prev => ({ ...prev, furnitureId: e.target.value }))}
@@ -225,7 +251,7 @@ export default function TransactionsPage() {
                         aria-label="Select furniture item to export"
                       >
                         <option value="">-- Choose Item From Active Inventory --</option>
-                        {furnitureOptions.map(item => (
+                        {furnitureOptions.map((item) => (
                           <option key={item.FurnitureId} value={String(item.FurnitureId)}>
                             {item.FurnitureName} — Owner: {item.FurnitureOwnerName}
                           </option>
@@ -237,7 +263,9 @@ export default function TransactionsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Quantity (Units)</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                          Quantity (Units)
+                        </label>
                         <input
                           type="number"
                           min="1"
@@ -248,7 +276,9 @@ export default function TransactionsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Export Date</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                          Export Date
+                        </label>
                         <input
                           type="date"
                           value={exportForm.date}
@@ -261,11 +291,12 @@ export default function TransactionsPage() {
                       type="submit"
                       className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm rounded-lg transition shadow-sm"
                     >
-                      save Export
+                      Save Export
                     </button>
                   </form>
                 </div>
               </div>
+
               {/* Warehouse Stock Balance Table */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="bg-slate-800 px-6 py-4">
@@ -286,10 +317,12 @@ export default function TransactionsPage() {
                     <tbody className="divide-y divide-gray-100 text-sm">
                       {furnitureOptions.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">No stock items found.</td>
+                          <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">
+                            No stock items found.
+                          </td>
                         </tr>
                       ) : (
-                        furnitureOptions.map(item => (
+                        furnitureOptions.map((item) => (
                           <tr key={item.FurnitureId} className="hover:bg-slate-50">
                             <td className="px-6 py-3">{item.FurnitureId}</td>
                             <td className="px-6 py-3">{item.FurnitureName}</td>

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from database import create_tables, get_connection
@@ -7,14 +7,14 @@ create_tables()
 
 app = FastAPI()
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 class ManagerRegister(BaseModel):
     firstName: str
@@ -71,10 +71,10 @@ def login_manager(data: ManagerLogin):
         return {"status": "fail", "message": "Invalid credentials"}
 
 
-# --- 2. FURNITURE MANAGEMENT (CRUD) ---
+
 
 @app.post("/api/furniture")
-def add_furniture(data: FurnitureRequest):
+def add_furniture(data: FurnitureRequest): 
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -92,7 +92,12 @@ def view_all_furniture():
     cursor.execute("SELECT * FROM Furniture")
     rows = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+
+    return [{
+        "FurnitureId": row["FurnitureId"], 
+        "FurnitureName": row["FurnitureName"], 
+        "FurnitureOwnerName": row["FurnitureOwnerName"]
+    } for row in rows]
 
 @app.put("/api/furniture/{id}")
 def modify_furniture(id: int, data: FurnitureRequest):
@@ -117,6 +122,7 @@ def delete_furniture(id: int):
 
 
 
+
 @app.post("/api/import")
 def record_import(data: ImportRequest):
     conn = get_connection()
@@ -133,6 +139,24 @@ def record_import(data: ImportRequest):
 def record_export(data: ExportRequest):
     conn = get_connection()
     cursor = conn.cursor()
+    
+
+    stock_query = """
+        SELECT 
+            COALESCE((SELECT SUM(Quantity) FROM Import WHERE FurnitureId = ?), 0) - 
+            COALESCE((SELECT SUM(Quantity) FROM Export WHERE FurnitureId = ?), 0) AS CurrentStock
+    """
+    cursor.execute(stock_query, (data.FurnitureId, data.FurnitureId))
+    result = cursor.fetchone()
+    current_stock = result["CurrentStock"] if result else 0
+
+    if data.Quantity > current_stock:
+        conn.close()
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Transaction blocked: Insufficient stock. Only {current_stock} items remaining."
+        )
+
     cursor.execute(
         "INSERT INTO Export (FurnitureId, ExportDate, Quantity) VALUES (?, ?, ?)",
         (data.FurnitureId, data.ExportDate, data.Quantity)
@@ -140,6 +164,7 @@ def record_export(data: ExportRequest):
     conn.commit()
     conn.close()
     return {"message": "Export logged successfully!"}
+
 
 
 
@@ -164,4 +189,12 @@ def generate_warehouse_status_report():
     cursor.execute(query)
     rows = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+
+    return [{
+        "FurnitureId": row["FurnitureId"],
+        "FurnitureName": row["FurnitureName"],
+        "FurnitureOwnerName": row["FurnitureOwnerName"],
+        "TotalImported": row["TotalImported"],
+        "TotalExported": row["TotalExported"],
+        "CurrentWarehouseStock": row["CurrentWarehouseStock"]
+    } for row in rows]
