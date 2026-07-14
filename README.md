@@ -6,7 +6,7 @@ A full-stack web application with a decoupled architecture, using **FastAPI (Pyt
 
 
  Project Overview & Architecture
-* `frontend` (TypeScript):** The visual layer. Captures user actions and sends background network requests.
+* `frontend` (TypeScript): The visual layer. Captures user actions and sends background network requests.
 * `backend` (Python + FastAPI):** The API layer. Receives requests, runs logic, and returns raw JSON data.
 * Data Flow:** Frontend `fetch()` FastAPI Endpoint  JSON Response UI Updates instantly.
 
@@ -15,8 +15,8 @@ A full-stack web application with a decoupled architecture, using **FastAPI (Pyt
  Repository Structure
 
 FCL/
-├── backend/          # FastAPI server configuration & routing endpoints
-└── frontend/         # TypeScript interactive components & UI layouts
+backend/           FastAPI server configuration & routing endpoints
+frontend/          TypeScript interactive components & UI layouts
 
 
 
