@@ -1,0 +1,8 @@
+{
+  "projects": [
+    {
+      "name": "fcl",
+      "root": "frontend"
+    }
+  ]
+}
