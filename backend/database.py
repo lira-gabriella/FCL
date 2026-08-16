@@ -1,6 +1,8 @@
 import sqlite3
+import os
 
-DB_FILE = "FAG.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.environ.get("DB_FILE", os.path.join(BASE_DIR, "FAG.db"))
 
 def get_connection():
     conn = sqlite3.connect(DB_FILE)
@@ -19,7 +21,8 @@ def create_tables():
                    lastName TEXT NOT NULL,
                    email TEXT NOT NULL UNIQUE,
                    telephone TEXT NOT NULL, 
-                   password TEXT NOT NULL
+                   password TEXT NOT NULL,
+                   role TEXT NOT NULL DEFAULT 'manager'
                    )
                 """)
     
@@ -55,4 +58,11 @@ def create_tables():
                 """)
 
     conn.commit()
+
+    cursor.execute("PRAGMA table_info(Manager)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "role" not in columns:
+        cursor.execute("ALTER TABLE Manager ADD COLUMN role TEXT NOT NULL DEFAULT 'manager'")
+        conn.commit()
+
     conn.close()

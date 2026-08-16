@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fcl-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/FAG.db:/app/FAG.db
+    environment:
+      CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      DB_FILE: "/app/FAG.db"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://backend:8000
+    container_name: fcl-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://backend:8000
+    restart: unless-stopped
+    depends_on:
+      - backend

@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import os, sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from database import create_tables, get_connection
 
 create_tables()
@@ -8,9 +11,12 @@ create_tables()
 app = FastAPI()
 
 
+allowed_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"], 
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,6 +28,7 @@ class ManagerRegister(BaseModel):
     email: str
     telephone: str
     password: str
+    role: str = "manager"
 
 class ManagerLogin(BaseModel):
     email: str
@@ -47,8 +54,8 @@ def register_manager(data: ManagerRegister):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO Manager (firstName, lastName, email, telephone, password) VALUES (?, ?, ?, ?, ?)",
-        (data.firstName, data.lastName, data.email, data.telephone, data.password)
+        "INSERT INTO Manager (firstName, lastName, email, telephone, password, role) VALUES (?, ?, ?, ?, ?, ?)",
+        (data.firstName, data.lastName, data.email, data.telephone, data.password, data.role)
     )
     conn.commit()
     conn.close()
@@ -66,7 +73,7 @@ def login_manager(data: ManagerLogin):
     conn.close()   
     
     if user is not None:
-        return {"status": "success", "firstName": user["firstName"]}
+        return {"status": "success", "firstName": user["firstName"], "role": user["role"]}
     else:
         return {"status": "fail", "message": "Invalid credentials"}
 
@@ -197,4 +204,22 @@ def generate_warehouse_status_report():
         "TotalImported": row["TotalImported"],
         "TotalExported": row["TotalExported"],
         "CurrentWarehouseStock": row["CurrentWarehouseStock"]
+    } for row in rows]
+
+
+@app.get("/api/managers")
+def list_managers():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT ManagerId, firstName, lastName, email, telephone, role FROM Manager")
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [{
+        "ManagerId": row["ManagerId"],
+        "firstName": row["firstName"],
+        "lastName": row["lastName"],
+        "email": row["email"],
+        "telephone": row["telephone"],
+        "role": row["role"]
     } for row in rows]
