@@ -30,17 +30,21 @@ export default function RegisterPage(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dataToSend)
     });
-      const result = await response.json();
-      setStatusMessage(result.message);
-
+    const result = await response.json();
+    
+    if (result.status === 'success') {
+      setStatusMessage('Registration successful! Redirecting to login...');
       setTimeout(() => {
         window.location.href = '/login';
-      }, 2000); 
+      }, 2000);
+    } else {
+      setStatusMessage(result.message || 'Registration failed');
+    }
   };
   
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-200 p-4 font-serif">
-      <div className="bg-[#f4f2f2] p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-300">
+    <main className="min-h-screen flex items-center justify-center bg-white p-4 font-sans">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-200">
         <div className="flex items-center justify-center mb-6">
           <div className="relative mr-4">
             <i className="fas fa-warehouse text-5xl text-blue-600"></i>
@@ -162,7 +166,11 @@ export default function RegisterPage(){
         </form>
 
         {statusMessage && (
-          <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-800 rounded text-center font-medium">
+          <div className={`mt-4 p-3 rounded text-center font-medium ${
+            statusMessage.includes('successful')
+              ? 'bg-green-100 border border-green-400 text-green-800'
+              : 'bg-red-100 border border-red-400 text-red-800'
+          }`}>
             {statusMessage}
           </div>
         )}

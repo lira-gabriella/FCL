@@ -36,16 +36,8 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 font-sans">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 h-96 w-96 rounded-full bg-blue-600/15 blur-3xl"></div>
-        <div className="absolute bottom-10 right-10 h-80 w-80 rounded-full bg-emerald-600/10 blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 h-64 w-64 rounded-full bg-amber-500/5 blur-3xl"></div>
-      </div>
-
+<main className="min-h-screen flex items-center justify-center bg-white p-4 font-sans">
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-emerald-500 shadow-2xl mb-4">
             <i className="fas fa-warehouse text-4xl text-white"></i>
