@@ -42,10 +42,10 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-emerald-500 shadow-2xl mb-4">
             <i className="fas fa-warehouse text-4xl text-white"></i>
           </div>
-          <h1 className="text-4xl font-extrablack tracking-tight text-white">
+          <h1 className="text-4xl font-extrablack tracking-tight text-slate-900">
             CARGO
           </h1>
-          <p className="text-blue-300 text-lg font-medium mt-1">
+          <p className="text-blue-600 text-lg font-medium mt-1">
             Warehouse Inventory Management
           </p>
         </div>
