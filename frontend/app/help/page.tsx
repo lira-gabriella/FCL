@@ -143,55 +143,53 @@ export default function HelpPage() {
  </div>
 
  <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+ <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center hover:shadow-lg hover:-translate-y-1 transition">
  <i className="fas fa-headset text-4xl text-blue-600 mb-3"></i>
- <h3 className="text-xl font-bold text-gray-800 mb-2">24/7 Live Support</h3>
- <p className="text-lg text-gray-500">
+ <h3 className="text-xl font-bold text-slate-900 mb-2">24/7 Live Support</h3>
+ <p className="text-gray-500 text-sm">
  Contact our support team anytime for urgent issues
  </p>
- <button className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-lg transition flex items-center justify-center gap-2 w-full">
+ <button className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 w-full">
  <i className="fas fa-phone"></i> Call Now
  </button>
  </div>
- <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+ <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center hover:shadow-lg hover:-translate-y-1 transition">
  <i className="fas fa-book text-4xl text-emerald-600 mb-3"></i>
- <h3 className="text-xl font-bold text-gray-800 mb-2">Documentation</h3>
- <p className="text-lg text-gray-500">
+ <h3 className="text-xl font-bold text-slate-900 mb-2">Documentation</h3>
+ <p className="text-gray-500 text-sm">
  Read the full CARGO system user guide and API reference
  </p>
- <button className="mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-lg transition flex items-center justify-center gap-2 w-full">
+ <button className="mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 w-full">
  <i className="fas fa-book-open"></i> Read Docs
  </button>
  </div>
- <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+ <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center hover:shadow-lg hover:-translate-y-1 transition">
  <i className="fas fa-bug text-4xl text-amber-600 mb-3"></i>
- <h3 className="text-xl font-bold text-gray-800 mb-2">Report a Bug</h3>
- <p className="text-lg text-gray-500">
+ <h3 className="text-xl font-bold text-slate-900 mb-2">Report a Bug</h3>
+ <p className="text-gray-500 text-sm">
  Found something broken? Let us know and we'll fix it
  </p>
- <button className="mt-4 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-lg transition flex items-center justify-center gap-2 w-full">
+ <button className="mt-4 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 w-full">
  <i className="fas fa-bug"></i> Submit Report
  </button>
  </div>
  </section>
 
  <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
- <div className="bg-white px-6 py-4">
- <h2 className="text-xl font-bold text-white flex items-center gap-2">
- <i className="fas fa-question-circle"></i>
+ <div className="bg-white px-6 py-4 border-b border-gray-200">
+ <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+ <i className="fas fa-question-circle text-blue-600"></i>
  Frequently Asked Questions
  </h2>
  </div>
  <div className="p-6 space-y-4">
  {faqs.map((faq, idx) => (
- <div key={idx} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-100 transition">
- <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-start gap-3">
- <i className="fas fa-angle-right text-blue-600 mt-0.5"></i>
+ <div key={idx} className="border border-gray-200 rounded-xl p-5 hover:bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+ <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-start gap-3">
+ <i className="fas fa-angle-right text-blue-600 mt-0.5 flex-shrink-0"></i>
  {faq.q}
  </h3>
- <p className="text-lg text-gray-500 leading-relaxed ml-9">
- {faq.a}
- </p>
+ <p className="text-gray-600 ml-7">{faq.a}</p>
  </div>
  ))}
  </div>

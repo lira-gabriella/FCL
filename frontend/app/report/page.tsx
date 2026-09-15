@@ -158,85 +158,86 @@ export default function ReportPage() {
  </div>
 
  
- <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
- <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm print:border-gray-300">
- <p className="text-lg font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
- <i className="fas fa-cube text-gray-500"></i> Monitored Profiles
- </p>
- </div>
- <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm print:border-gray-300">
- <p className="text-lg font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
- <i className="fas fa-truck-loading text-emerald-500"></i> Total Volume Imported
- </p>
- <h3 className="text-3xl font-black mt-1 text-emerald-600">+{grandImports} Units</h3>
- </div>
- <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm print:border-gray-300">
- <p className="text-lg font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
- <i className="fas fa-truck text-amber-500"></i> Total Volume Exported
- </p>
- <h3 className="text-3xl font-black mt-1 text-amber-600">-{grandExports} Units</h3>
- </div>
- <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm print:border-gray-300">
- <p className="text-lg font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
- <i className="fas fa-warehouse text-blue-500"></i> Net Current Balance
- </p>
- <h3 className="text-3xl font-black mt-1 text-blue-600">{currentNetStock} Available</h3>
- </div>
- </section>
+<section className="grid grid-cols-2 md:grid-cols-4 gap-5">
+  <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition print:border-gray-300">
+  <p className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+  <i className="fas fa-cube text-blue-500"></i> Monitored Profiles
+  </p>
+  <h3 className="text-4xl font-black mt-2 text-slate-900">{reportData.length}</h3>
+  </div>
+  <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition print:border-gray-300">
+  <p className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+  <i className="fas fa-truck-loading text-emerald-500"></i> Total Volume Imported
+  </p>
+  <h3 className="text-4xl font-black mt-2 text-emerald-600">+{grandImports} Units</h3>
+  </div>
+  <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition print:border-gray-300">
+  <p className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+  <i className="fas fa-truck text-amber-500"></i> Total Volume Exported
+  </p>
+  <h3 className="text-4xl font-black mt-2 text-amber-600">-{grandExports} Units</h3>
+  </div>
+  <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition print:border-gray-300">
+  <p className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+  <i className="fas fa-warehouse text-blue-500"></i> Net Current Balance
+  </p>
+  <h3 className="text-4xl font-black mt-2 text-blue-600">{currentNetStock} Available</h3>
+  </div>
+  </section>
 
  
- <section className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between print:hidden">
- <div className="w-full md:w-96">
- <input
- type="text"
- placeholder="Filter by keyword (Item name, business owner...)"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full text-lg p-3 border border-gray-300 rounded-lg text-slate-900 focus:outline-none focus:border-blue-400 bg-gray-50"
- />
- </div>
- <div className="flex gap-2 w-full md:w-auto">
- {['all', 'healthy', 'low', 'empty'].map((filterType) => (
- <button
- key={filterType}
- onClick={() => setStockFilter(filterType)}
- className={`text-lg px-5 py-3 rounded-xl font-bold capitalize transition ${
- stockFilter === filterType 
- ? 'bg-blue-600 text-white shadow-sm' 
- : 'bg-gray-50 text-gray-500 hover:bg-gray-200 :bg-gray-700 :bg-gray-700'
- }`}
- >
- {filterType === 'all' ? 'Show All Stocks' : `${filterType} Stock`}
- </button>
- ))}
- </div>
- </section>
+<section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between print:hidden">
+  <div className="w-full md:w-96">
+  <input
+  type="text"
+  placeholder="Filter by keyword (Item name, business owner...)"
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition"
+  />
+  </div>
+  <div className="flex gap-2 w-full md:w-auto">
+  {['all', 'healthy', 'low', 'empty'].map((filterType) => (
+  <button
+  key={filterType}
+  onClick={() => setStockFilter(filterType)}
+  className={`px-5 py-3 rounded-xl font-bold capitalize transition ${
+  stockFilter === filterType
+  ? 'bg-blue-600 text-white shadow-sm'
+  : 'bg-gray-50 text-gray-500 hover:bg-gray-200'
+  }`}
+  >
+  {filterType === 'all' ? 'Show All Stocks' : `${filterType} Stock`}
+  </button>
+  ))}
+  </div>
+  </section>
 
- <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden print:border-gray-300">
- <table className="w-full text-left border-collapse">
- <thead>
- <tr className="bg-slate-700 text-white text-lg font-bold uppercase tracking-wider">
- <th className="p-4 w-24">Item ID</th>
- <th className="p-4">Furniture Type Description</th>
- <th className="p-4">Assigned Trader / Client</th>
- <th className="p-4 text-center w-36">Total Imported</th>
- <th className="p-4 text-center w-36">Total Exported</th>
- <th className="p-4 text-center w-36">Warehouse Stock</th>
- <th className="p-4 text-center w-36">Stock Status</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-gray-100 text-lg">
- {loading ? (
- <tr>
- <td colSpan={7} className="px-6 py-12 text-center text-xl text-gray-500 animate-pulse">Running server analytical query...</td>
- </tr>
- ) : filteredRows.length === 0 ? (
- <tr>
- <td colSpan={7} className="px-6 py-12 text-center text-xl text-gray-500 italic">No report profiles matched your query parameters.</td>
- </tr>
- ) : (
- filteredRows.map((row) => {
- let statusLabel ="Healthy Balance";
+<section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden print:border-gray-300">
+  <table className="w-full text-left border-collapse">
+  <thead>
+  <tr className="bg-slate-800 text-white text-sm font-bold uppercase tracking-wider">
+  <th className="p-4 w-24">Item ID</th>
+  <th className="p-4">Furniture Type Description</th>
+  <th className="p-4">Assigned Trader / Client</th>
+  <th className="p-4 text-center w-36">Total Imported</th>
+  <th className="p-4 text-center w-36">Total Exported</th>
+  <th className="p-4 text-center w-36">Warehouse Stock</th>
+  <th className="p-4 text-center w-36">Stock Status</th>
+  </tr>
+  </thead>
+  <tbody className="divide-y divide-gray-100">
+  {loading ? (
+  <tr>
+  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 animate-pulse">Running server analytical query...</td>
+  </tr>
+  ) : filteredRows.length === 0 ? (
+  <tr>
+  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 italic">No report profiles matched your query parameters.</td>
+  </tr>
+  ) : (
+  filteredRows.map((row) => {
+  let statusLabel ="Healthy Balance";
  let statusColor ="bg-emerald-50 text-emerald-700 border-emerald-200";
 
  if (row.CurrentWarehouseStock === 0) {

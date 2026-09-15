@@ -3,115 +3,147 @@
 import { useState } from "react";
 import Link from "next/link";
 
-export default function LoginPage(){
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const [email , setEmail] = useState('');
-  const [password , setPassword] = useState('');
-  const [statusMessage , setStatusMessage] = useState('');
-
-
-  const handleLogin = async (e: React.FormEvent) =>{
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setStatusMessage('');
 
-    const dataToSend = {
-      email: email,
-      password: password
-    }
-
-    const response = await fetch('/api/login',{
-      method:'POST',
-      headers:{'Content-Type':"application/json"},
-      body:JSON.stringify(dataToSend)
+    const dataToSend = { email, password };
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataToSend),
     });
 
     const result = await response.json();
 
-    if(result.status === 'success'){
+    if (result.status === 'success') {
       sessionStorage.setItem('userFirstName', result.firstName);
       sessionStorage.setItem('userRole', result.role);
       sessionStorage.setItem('isLoggedIn', 'true');
       setStatusMessage(`Welcome back, ${result.firstName}! Redirecting`);
       window.location.href = '/welcome';
-    }else{
+    } else {
       setStatusMessage(result.message || 'Invalid credentials');
+      setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-200 p-4 font-serif">
-      <div className="bg-[#f4f2f2] p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-300">
-        <div className="flex items-center justify-center mb-6">
-          <div className="relative mr-4">
-            <i className="fas fa-warehouse text-4xl text-blue-700"></i>
-            <i className="fas fa-box-open absolute -bottom-1 -right-1 text-lg text-amber-500"></i>
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 font-sans">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 h-96 w-96 rounded-full bg-blue-600/15 blur-3xl"></div>
+        <div className="absolute bottom-10 right-10 h-80 w-80 rounded-full bg-emerald-600/10 blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 h-64 w-64 rounded-full bg-amber-500/5 blur-3xl"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
+        {/* Logo/Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-emerald-500 shadow-2xl mb-4">
+            <i className="fas fa-warehouse text-4xl text-white"></i>
           </div>
-          <h2 className="text-4xl font-serif text-gray-900 tracking-wide uppercase">
-            LOGIN FORM
-          </h2>
+          <h1 className="text-4xl font-extrablack tracking-tight text-white">
+            CARGO
+          </h1>
+          <p className="text-blue-300 text-lg font-medium mt-1">
+            Warehouse Inventory Management
+          </p>
         </div>
 
-        <p className="text-center text-gray-600 text-sm font-serif mb-6">
-          <i className="fas fa-sign-in-alt mr-2 text-blue-500"></i>
-          Enter your credentials to access the system
+        {/* Login Card */}
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+            <i className="fas fa-sign-in-alt text-blue-600"></i>
+            Welcome Back
+          </h2>
+          <p className="text-slate-500 text-sm mb-6">
+            Sign in to access your warehouse dashboard
+          </p>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <i className="fas fa-envelope text-blue-500"></i>
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <i className="fas fa-lock text-blue-500"></i>
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50"
+              />
+            </div>
+
+            {statusMessage && (
+              <div className={`px-4 py-3 rounded-xl text-sm font-medium ${
+                statusMessage.includes('Welcome')
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {statusMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-sign-in-alt"></i>
+                  Sign In
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-slate-500 text-sm">
+              Don't have an account?{' '}
+              <Link href="/register" className="text-blue-600 font-semibold hover:text-blue-700 transition">
+                Register here
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        <p className="text-center text-slate-400 text-xs mt-6">
+          Secure warehouse management system
         </p>
-
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div>
-            <label className="block text-xl font-serif text-gray-900 mb-1">
-              <i className="fas fa-envelope mr-2 text-blue-500"></i>Email Address
-            </label>
-            <input 
-              type="email" 
-              placeholder="Enter your email"
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
-              className="w-full p-2.5 border border-gray-300 rounded bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-serif text-lg" 
-            />
-          </div>
-
-          <div>
-            <label className="block text-xl font-serif text-gray-900 mb-1">
-              <i className="fas fa-lock mr-2 text-blue-500"></i>Password
-            </label>
-            <input 
-              type="password" 
-              placeholder="Enter your password"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-              className="w-full p-2.5 border border-gray-300 rounded bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-serif text-lg" 
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            className="w-full bg-[#2b8242] hover:bg-green-700 text-white text-xl py-3 rounded transition font-medium shadow-sm font-serif"
-          >
-            <i className="fas fa-sign-in-alt mr-2"></i>Login
-          </button>
-        </form>
-
-        {statusMessage && (
-          <div className={`mt-4 p-3 border rounded text-center font-medium ${
-            statusMessage.includes('Welcome') 
-              ? 'bg-green-100 border-green-400 text-green-800' 
-              : 'bg-red-100 border-red-400 text-red-800'
-          }`}>
-            {statusMessage}
-          </div>
-        )}
-
-        <p className="mt-6 text-center text-lg text-gray-900 font-serif">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-blue-600 underline hover:text-blue-800">
-            Register
-          </Link>
-        </p>
-
       </div>
     </main>
   );
-
-} 
-
+}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import DashboardCharts from '@/app/components/DashboardCharts';
 
 export default function DashboardPage() {
  const [furnitureList, setFurnitureList] = useState<any[]>([]);
@@ -216,9 +217,11 @@ export default function DashboardPage() {
  {furnitureList.reduce((sum, item) => sum + (item.CurrentWarehouseStock || 0), 0)}
  </h3>
  </div>
- </section>
+</section>
 
- <section className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+  <DashboardCharts furnitureList={furnitureList} />
+
+  <section className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
  <h2 className="text-2xl font-bold text-gray-500 flex items-center gap-2">
  <i className="fas fa-plus-circle text-blue-600"></i>
  Register New Furniture Type
