@@ -127,14 +127,14 @@ export default function SettingsPage() {
  Theme
  </label>
  <div className="flex gap-4">
- <label className="flex items-center gap-2 text-lg cursor-pointer">
- <input type="radio"name="theme"defaultChecked className="form-radio h-5 w-5 text-blue-600"/>
- <span>Dark</span>
- </label>
- <label className="flex items-center gap-2 text-lg cursor-pointer">
- <input type="radio"name="theme=" className="form-radio h-5 w-5 text-blue-600"/>
- <span>Light</span>
- </label>
+<label className="flex items-center gap-2 text-lg cursor-pointer">
+  <input type="radio" name="theme" defaultChecked className="form-radio h-5 w-5 text-blue-600"/>
+  <span>Light</span>
+</label>
+<label className="flex items-center gap-2 text-lg cursor-pointer">
+  <input type="radio" name="theme" className="form-radio h-5 w-5 text-blue-600"/>
+  <span>Dark</span>
+</label>
  </div>
  </div>
  </div>

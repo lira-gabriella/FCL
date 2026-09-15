@@ -6,6 +6,8 @@ import DashboardCharts from '@/app/components/DashboardCharts';
 import InventoryHealthScore from '@/app/components/InventoryHealthScore';
 import LiveActivityTicker from '@/app/components/LiveActivityTicker';
 import RestockPrediction from '@/app/components/RestockPrediction';
+import StockAgingAnalysis from '@/app/components/StockAgingAnalysis';
+import InventoryValuation from '@/app/components/InventoryValuation';
 
 export default function DashboardPage() {
  const [furnitureList, setFurnitureList] = useState<any[]>([]);
@@ -234,6 +236,11 @@ export default function DashboardPage() {
   </div>
 
   <RestockPrediction furnitureList={furnitureList} />
+
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <StockAgingAnalysis furnitureList={furnitureList} />
+  <InventoryValuation furnitureList={furnitureList} />
+  </div>
 
   <section className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
  <h2 className="text-2xl font-bold text-gray-500 flex items-center gap-2">
