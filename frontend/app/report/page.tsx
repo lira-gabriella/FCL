@@ -15,11 +15,12 @@ interface ReportRow {
 }
 
 export default function ReportPage() {
- const [reportData, setReportData] = useState<ReportRow[]>([]);
- const [loading, setLoading] = useState(true);
- const [searchQuery, setSearchQuery] = useState('');
- const [stockFilter, setStockFilter] = useState('all');
- const [userRole, setUserRole] = useState('');
+const [reportData, setReportData] = useState<ReportRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [stockFilter, setStockFilter] = useState('all');
+  const [userRole, setUserRole] = useState('');
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
  useEffect(() => {
  if (typeof window !== 'undefined') {
@@ -71,11 +72,117 @@ export default function ReportPage() {
  const grandExports = reportData.reduce((acc, row) => acc + row.TotalExported, 0);
  const currentNetStock = reportData.reduce((acc, row) => acc + row.CurrentWarehouseStock, 0);
 
- const handlePrint = () => {
- window.print();
- };
+const handlePrint = () => {
+  window.print();
+};
 
- return (
+const downloadCSV = () => {
+  const headers = ['Item ID', 'Furniture Type', 'Business Owner', 'Total Imported', 'Total Exported', 'Warehouse Stock', 'Stock Status'];
+  const rows = filteredRows.map(row => {
+    const stock = row.CurrentWarehouseStock || 0;
+    let status = 'Healthy Balance';
+    if (stock === 0) status = 'Out of Stock';
+    else if (stock <= 10) status = 'Low Stock Hazard';
+    return [
+      row.FurnitureId,
+      row.FurnitureName,
+      row.FurnitureOwnerName,
+      row.TotalImported || 0,
+      row.TotalExported || 0,
+      stock,
+      status,
+    ];
+  });
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => `"${cell}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `warehouse-report-${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  setShowDownloadMenu(false);
+};
+
+const downloadPDF = () => {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+
+  const rowsHtml = filteredRows.map(row => {
+    const stock = row.CurrentWarehouseStock || 0;
+    let status = 'Healthy Balance';
+    let statusColor = '#10b981';
+    if (stock === 0) { status = 'Out of Stock'; statusColor = '#ef4444'; }
+    else if (stock <= 10) { status = 'Low Stock Hazard'; statusColor = '#f59e0b'; }
+    return `
+      <tr>
+        <td style="padding:8px;border:1px solid #e5e7eb;text-align:center">${row.FurnitureId}</td>
+        <td style="padding:8px;border:1px solid #e5e7eb">${row.FurnitureName}</td>
+        <td style="padding:8px;border:1px solid #e5e7eb">${row.FurnitureOwnerName}</td>
+        <td style="padding:8px;border:1px solid #e5e7eb;text-align:center">${row.TotalImported || 0}</td>
+        <td style="padding:8px;border:1px solid #e5e7eb;text-align:center">${row.TotalExported || 0}</td>
+        <td style="padding:8px;border:1px solid #e5e7eb;text-align:center;font-weight:700">${stock}</td>
+        <td style="padding:8px;border:1px solid #e5e7eb;text-align:center;color:${statusColor};font-weight:700">${status}</td>
+      </tr>`;
+  }).join('');
+
+  printWindow.document.write(`
+    <html>
+    <head>
+      <title>Warehouse Audit Report</title>
+      <style>
+        body { font-family: serif; padding: 40px; color: #1e293b; }
+        h1 { font-size: 28px; color: #1e3a8a; text-transform: uppercase; letter-spacing: 1px; }
+        .meta { color: #64748b; margin-bottom: 20px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th { background: #1e3a8a; color: white; padding: 10px; text-align: left; font-weight: bold; }
+        th.center { text-align: center; }
+        .summary { display: flex; gap: 20px; margin: 20px 0; }
+        .summary div { background: #f8fafc; padding: 12px 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .summary span { font-size: 24px; font-weight: bold; display: block; }
+        .summary small { color: #64748b; font-size: 12px; text-transform: uppercase; }
+        @media print { body { -webkit-print-color-adjust: exact; } }
+      </style>
+    </head>
+    <body>
+      <h1>Warehouse Audit Ledger Report</h1>
+      <div class="meta">
+        Generated: ${new Date().toLocaleDateString()} | Scope: Active Stocks Only | Total Items: ${filteredRows.length}
+      </div>
+      <div class="summary">
+        <div><small>Total Imported</small><span style="color:#10b981">+${grandImports}</span></div>
+        <div><small>Total Exported</small><span style="color:#f59e0b">-${grandExports}</span></div>
+        <div><small>Net Balance</small><span style="color:#3b82f6">${currentNetStock}</span></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="center">Item ID</th>
+            <th>Furniture Type</th>
+            <th>Business Owner</th>
+            <th class="center">Total Imported</th>
+            <th class="center">Total Exported</th>
+            <th class="center">Stock</th>
+            <th class="center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+      <script>window.print(); setTimeout(() => window.close(), 500);</script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  setShowDownloadMenu(false);
+};
+
+return (
  <div className="flex min-h-screen bg-gray-50 font-serif print:bg-white text-gray-500">
  <aside className="w-72 bg-[#0a192f] text-gray-300 flex flex-col justify-between shrink-0 shadow-xl print:hidden">
  <div>
@@ -127,13 +234,41 @@ export default function ReportPage() {
  <div className="text-lg font-medium text-gray-500">
  System Status: <span className="text-emerald-600 font-bold">● Live Operational</span>
  </div>
- <div className="flex items-center gap-4">
- <button 
- onClick={handlePrint}
- className="px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 rounded-xl text-lg font-bold transition flex items-center gap-2 shadow-sm"
+ <div className="flex items-center gap-3">
+ <div className="relative group">
+ <button
+ onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+ className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition flex items-center gap-2 shadow-sm"
  >
- <i className="fas fa-print"></i> Export PDF / Print
+ <i className="fas fa-download"></i> Download
+ <i className="fas fa-chevron-down text-xs"></i>
  </button>
+ {showDownloadMenu && (
+ <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-20">
+ <button
+ onClick={downloadCSV}
+ className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 font-medium"
+ >
+ <i className="fas fa-file-csv text-emerald-600 text-lg"></i>
+ <span>Download CSV</span>
+ </button>
+ <button
+ onClick={downloadPDF}
+ className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 font-medium"
+ >
+ <i className="fas fa-file-pdf text-red-600 text-lg"></i>
+ <span>Download PDF</span>
+ </button>
+ <button
+ onClick={handlePrint}
+ className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 font-medium"
+ >
+ <i className="fas fa-print text-blue-600 text-lg"></i>
+ <span>Print Report</span>
+ </button>
+ </div>
+ )}
+ </div>
  </div>
  </header>
 
