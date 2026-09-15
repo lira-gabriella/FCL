@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function WelcomePage() {
@@ -46,11 +47,14 @@ export default function WelcomePage() {
         </p>
 
         <div className="mb-8 relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/5 max-w-4xl mx-auto">
-          <img
+          <Image
             src="/cargo_im.jpg"
             alt="Cargo delivery truck unloading containers at warehouse"
+            width={800}
+            height={500}
             className="w-full h-auto object-cover rounded-2xl shadow-2xl"
-            style={{ maxHeight: '500px', width: '100%' }}
+            style={{ maxHeight: '500px' }}
+            priority
           />
         </div>
 

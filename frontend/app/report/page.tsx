@@ -298,7 +298,7 @@ return (
   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
   <i className="fas fa-cube text-blue-500"></i> Monitored Profiles
   </p>
-  <h3 className="text-4xl font-black mt-2 text-slate-900">{reportData.length}</h3>
+  <h3 className="text-4xl font-black mt-2 text-slate-900">{totalTypes}</h3>
   </div>
   <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition print:border-gray-300">
   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">

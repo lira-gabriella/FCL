@@ -20,36 +20,36 @@ export default function UsersPage() {
  const [error, setError] = useState('');
  const [userRole, setUserRole] = useState('');
 
- useEffect(() => {
- if (typeof window !== 'undefined') {
- const loggedIn = sessionStorage.getItem('isLoggedIn');
- const role = sessionStorage.getItem('userRole') || 'manager';
- if (!loggedIn || role !== 'admin') {
- window.location.href = '/login';
- } else {
- setUserRole(role);
- }
- }
- }, []);
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const loggedIn = sessionStorage.getItem('isLoggedIn');
+    const role = sessionStorage.getItem('userRole') || 'manager';
+    if (!loggedIn || role !== 'admin') {
+      window.location.href = '/login';
+    } else {
+      setUserRole(role);
+    }
+  }
+}, []);
 
- useEffect(() => {
- fetchManagers();
- }, []);
+const fetchManagers = async () => {
+  try {
+    setLoading(true);
+    const res = await fetch(`${API_BASE_URL}/api/managers`);
+    if (!res.ok) throw new Error("Could not fetch managers.");
+    const data: Manager[] = await res.json();
+    setManagers(data);
+  } catch (err) {
+    console.error(err);
+    setError("Failed to load user accounts.");
+  } finally {
+    setLoading(false);
+  }
+};
 
- const fetchManagers = async () => {
- try {
- setLoading(true);
- const res = await fetch(`${API_BASE_URL}/api/managers`);
- if (!res.ok) throw new Error("Could not fetch managers.");
- const data: Manager[] = await res.json();
- setManagers(data);
- } catch (err) {
- console.error(err);
- setError("Failed to load user accounts.");
- } finally {
- setLoading(false);
- }
- };
+useEffect(() => {
+  fetchManagers();
+}, []);
 
  const handleLogout = () => {
  sessionStorage.removeItem('isLoggedIn');
