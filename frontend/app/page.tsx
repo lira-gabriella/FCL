@@ -15,7 +15,7 @@ export default function LandingPage() {
         }}
       />
 
-      <div className="absolute inset-0 w-1/2 h-full bg-[#0b1a3a] left-0 top-0" />
+      <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-blue-900/85 via-blue-900/30 to-transparent left-0 top-0" />
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl"></div>
