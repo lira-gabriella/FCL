@@ -1,8 +1,6 @@
 {
-  "projects": [
-    {
-      "name": "fcl",
-      "root": "frontend"
-    }
-  ]
+  "rootDirectory": "frontend",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install"
 }
